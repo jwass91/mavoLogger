@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Logger</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://dev.mavo.io/dist/mavo.css">
+    <script src="https://dev.mavo.io/dist/mavo.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body mv-storage="local" mv-app id="logger" mv-plugins="sort">
+    <div class="header">
+        Logger
+    </div>
+    
+    <a href="#" class="showAll">◀ Back to all activities</a>
+
+    <div id="container">
+
+        <article mv-multiple property="activity" class="card" id="activity[title]">
+            
+            <!-- Header (with stats) -->
+            <div class="statsContainer">
+
+                <!-- Header text -->
+                <a href="#activity[title]">
+                    <div class="cardHead" style="background:[color];">
+                        <span property="title" class="title">Exercise</span>
+                    </div>
+                </a>
+
+                <!-- Days since -->
+                <div class="[if(daysWithoutStat, cardStatsRow, hide)]">
+                    <div class="statHolder">
+                        <div class="statAmount">
+                            [if(count(event)!=0, first(sort(event, "-date")).daysSince, "NA")]
+                        </div>
+                        <div class="statCaption">
+                            day[if(first(sort(event, "-date")).daysSince==1, "", "s")] without
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Times last week -->
+                <div class="[if(timesLastWeekStat, cardStatsRow, hide)]">
+                    <div class="statHolder">
+                        <div class="statAmount">
+                            <span hidden property="lastWeek">[count(filter(event, daysSince<=7))]</span>
+                            [lastWeek]
+                        </div>
+                        <div class="statCaption">
+                            time[if(lastWeek==1, "", "s")] <small><i>(this week)</i></small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Times last month -->
+                <div class="[if(timesLastMonthStat, cardStatsRow, hide)]">
+                    <div class="statHolder">
+                        <div class="statAmount">
+                            <span hidden property="lastMonth">[count(filter(event, daysSince<=30))]</span>
+                            [lastMonth]
+                        </div>
+                        <div class="statCaption">
+                            time[if(lastMonth==1, "", "s")] <small><i>(this month)</i></small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Average intensity -->
+                <div class="[if(intensityStat, cardStatsRow, hide)]">
+                    <div class="statHolder">
+                        <div class="statAmount">
+                            [floor(average(filter(intensity, daysSince<=7)) * 10)]%
+                        </div>
+                        <div class="statCaption">
+                            avg. intensity <small><i>(this week)</i></small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total duration -->
+                <div class="[if(totalDurationStat, cardStatsRow, hide)]">
+                    <div class="statHolder">
+                        <div class="statAmount">
+                            <span class="[if(averageUnit!='days', hide)]">[days(sum(filter(duration, daysSince<=7)))]</span>
+                            <span class="[if(averageUnit!='hrs', hide)]">[hours(sum(filter(duration, daysSince<=7)))]</span>
+                            <span class="[if(averageUnit!='mins', hide)]">[minutes(sum(filter(duration, daysSince<=7)))]</span>
+                            <span class="[if(averageUnit!='secs', hide)]">[seconds(sum(filter(duration, daysSince<=7)))]</span>
+                        </div>
+                        <div class="statCaption">
+                            <span class="[if(totalUnit!='days', hide)]">days</span>
+                            <span class="[if(totalUnit!='hrs', hide)]">hours</span>
+                            <span class="[if(totalUnit!='mins', hide)]">minutes</span>
+                            <span class="[if(totalUnit!='seconds', hide)]">seconds</span>
+                            total <small><i>(this week)</i></small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Average Duration -->
+                <div class="[if(averageDurationStat, cardStatsRow, hide)]">
+                    <div class="statHolder">
+                        <div class="statAmount">
+                            <span class="[if(averageUnit!='days', hide)]">[days(average(filter(duration, daysSince<=7)))]</span>
+                            <span class="[if(averageUnit!='hrs', hide)]">[hours(average(filter(duration, daysSince<=7)))]</span>
+                            <span class="[if(averageUnit!='mins', hide)]">[minutes(average(filter(duration, daysSince<=7)))]</span>
+                            <span class="[if(averageUnit!='secs', hide)]">[seconds(average(filter(duration, daysSince<=7)))]</span>
+                        </div>
+                        <div class="statCaption">
+                            <span class="[if(averageUnit!='days',hide)]">days</span>
+                            <span class="[if(averageUnit!='hrs',hide)]">hours</span>
+                            <span class="[if(averageUnit!='mins',hide)]">minutes</span>
+                            <span class="[if(averageUnit!='secs',hide)]">seconds</span>
+                            avg. <small><i>(this week)</i></small>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Body (of events) -->
+            <div class="cardBody">
+
+                <button mv-action="add(event)" class="logBtn">Log <span property="singularTitle" mv-default="[activity.title]"></span></button>
+                
+                <!-- Events -->
+                <div class="events">
+                    <br>
+                    <div property="event" mv-multiple mv-order="desc" mv-sort="-date" id="event">
+
+                        <!-- Date property -->
+                        <time property="date" mv-default="[$today]"></time>
+                        
+                        <!-- Intensity property -->
+                        <div class="[if(!intensityOn, hide, intensityHolder)]""><meter property="intensity" min="0" value="5" max="10" mv-edit-step="1" mv-default="5"></meter></div>
+
+                        <!-- Duration property -->
+                        <div class="[if(!durationOn, hide, durationHolder)]">
+                            <span class="[if(!daysOn, hide)]" property="days" mv-default="0" mv-edit-type="number" mv-edit-min="0"><small> d </small></span>
+                            <span class="[if(!hrsOn, hide)]" property="hrs" mv-default="0" mv-edit-type="number" mv-edit-min="0"><small> h </small></span>
+                            <span class="[if(!minsOn, hide)]" property="mins" mv-default="0" mv-edit-type="number" mv-edit-min="0"><small> m </small></span>
+                            <span class="[if(!secsOn, hide)]" property="secs" mv-default="0" mv-edit-type="number" mv-edit-min="0"><small> s</small></span>
+                        </div>
+                        
+                        <!-- Notes property -->
+                        <br>
+                        <div class="[if(!notesOn, hide, notesHolder)]"><span property="notes" class="notes">some notes...</span></div>
+
+                        <!-- Hidden helper properties -->
+                        <span hidden property="duration">[days*24*3600*1000 + hrs*3600*1000 + mins*60*1000 + secs*1000]</span>
+                        <span hidden property="daysSince">[($today-date) / (1000*60*60*24)]</span>
+                        <span hidden property="monthsSince">[floor(daysSince/30)]</span>
+
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div class="settings">
+                    <br>
+                    <details>
+                        <summary>⚙ Settings</summary>
+
+                        <!-- Property settings -->
+                        <span>Properties:</span>
+
+                        <!-- Notes settings -->
+                        <div>
+                            <input type="checkbox" id="notesOn" property="notesOn" mv-default="true">
+                            <label for="notesOn">Notes field</label>
+                        </div>
+
+                        <!-- Intensity settings -->
+                        <div>
+                            <input type="checkbox" id="intensityOn" property="intensityOn" mv-default="false">
+                            <label for="intensityOn">Intensity field</label>
+                        </div>
+
+                        <!-- Duration Settings -->
+                        <div>
+                            <input type="checkbox" id="durationOn" property="durationOn" mv-default="false">
+                            <label for="durationOn">Duration field</label>
+                        </div>
+                        
+                        <details class="[if(!durationOn, hide)]" style="margin-left:20px;">
+                            <summary>Precision Settings</summary>
+                            <div>
+                                <input type="checkbox" id="daysOn" property="daysOn" mv-default="false">
+                                <label for="daysOn">Days</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="hrsOn" property="hrsOn" mv-default="true">
+                                <label for="hrsOn">Hours</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="minsOn" property="minsOn" mv-default="true">
+                                <label for="minsOn">Minutes</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="secsOn" property="secsOn" mv-default="false">
+                                <label for="secsOn">Seconds</label>
+                            </div>
+                        </details>
+
+                        <!-- Statistic settings -->
+                        <br>
+                        <span>Statistics:</span>
+                        <span hidden property="numStatsOn">[count(filter(list(daysWithoutStat,timesLastWeekStat,timesLastMonthStat,intensityStat,totalDurationStat,averageDurationStat),true))]</span>
+                        
+                        <!-- Days without -->
+                        <div class="[if(!daysWithoutStat && numStatsOn>=3, hide)]">
+                            <input type="checkbox" id="daysWithoutStat" property="daysWithoutStat" mv-default="true">
+                            <label for="daysWithoutStat">Days without</label>
+                        </div>
+                        <div class="[if(!(!daysWithoutStat && numStatsOn>=3), hide)]">
+                            <input disabled type="checkbox" id="disabledDaysWithoutStat">
+                            <label style="color:gray;" for="disabledDaysWithoutStat">Days without</label>
+                        </div>
+
+                        <!-- Times last week -->
+                        <div class="[if(!timesLastWeekStat && numStatsOn>=3, hide)]">
+                            <input type="checkbox" id="timesLastWeekStat" property="timesLastWeekStat" mv-default="true">
+                            <label for="timesLastWeekStat">Times last week</label>
+                        </div>
+                        <div class="[if(!(!timesLastWeekStat && numStatsOn>=3), hide)]">
+                            <input disabled type="checkbox" id="disabledTimesLastWeekStat">
+                            <label style="color:gray;" for="disabledTimesLastWeekStat">Times last week</label>
+                        </div>
+
+                        <!-- Times last month -->
+                        <div class="[if(!timesLastMonthStat && numStatsOn>=3, hide)]">
+                            <input type="checkbox" id="timesLastMonthStat" property="timesLastMonthStat" mv-default="true">
+                            <label for="timesLastMonthStat">Times last month</label>
+                        </div>
+                        <div class="[if(!(!timesLastMonthStat && numStatsOn>=3), hide)]">
+                            <input disabled type="checkbox" id="disabledTimesLastMonthStat">
+                            <label style="color:gray;" for="disabledTimesLastMonthStat">Times last month</label>
+                        </div>
+
+                        <!-- Average intensity -->
+                        <div class="[if(!intensityOn, hide, if(!intensityStat && numStatsOn>=3, hide))]">
+                            <input type="checkbox" id="intensityStat" property="intensityStat" mv-default="false">
+                            <label for="intensityStat">Average intensity (last week)</label>
+                        </div>
+                        <div class="[if(!intensityOn, hide, if(!(!intensityStat && numStatsOn>=3), hide))]">
+                            <input disabled type="checkbox" id="disabledIntensityStat">
+                            <label style="color:gray;" for="disabledIntensityStat">Average intensity (last week)</label>
+                        </div>
+
+                        <!-- Total duration -->
+                        <div class="[if(!durationOn, hide, if(!totalDurationStat && numStatsOn>=3, hide))]">
+                            <input type="checkbox" id="totalDurationStat" property="totalDurationStat" mv-default="false">
+                            <label for="totalDurationStat">Total duration (last week)</label> in 
+                            <select property="totalUnit">
+                                <option value="days">days</option> 
+                                <option value="hrs" selected>hours</option> 
+                                <option value="mins">minutes</option>
+                                <option value="secs">seconds</option>
+                            </select>
+                        </div>
+                        <div class="[if(!durationOn, hide, if(!(!totalDurationStat && numStatsOn>=3), hide))]">
+                            <input disabled type="checkbox" id="disabledTotalDurationStat">
+                            <label style="color:gray;" for="disabledTotalDurationStat">Total duration (last week)</label>
+                        </div>
+
+                        <!-- Average duration -->
+                        <div class="[if(!durationOn, hide, if(!averageDurationStat && numStatsOn>=3, hide))]">
+                            <input type="checkbox" id="averageDurationStat" property="averageDurationStat" mv-default="false">
+                            <label for="averageDurationStat">Average duration (last week)</label>
+                            <select property="averageUnit">
+                                <option value="days">days</option> 
+                                <option value="hrs" selected>hours</option> 
+                                <option value="mins">minutes</option>
+                                <option value="secs">seconds</option>
+                            </select>
+                        </div>
+                        <div class="[if(!durationOn, hide, if(!(!averageDurationStat && numStatsOn>=3), hide))]">
+                            <input disabled type="checkbox" id="disabledAverageDurationStat">
+                            <label style="color:gray;" for="disabledAverageDurationStat">Average duration (last week)</label>
+                        </div>
+
+                        <!-- Color -->
+                        <br>
+                        Color: <input property="color" type="color" mv-default="#8e6c88"/>
+
+                    </details>
+                </div>
+            </div>
+        </article>
+    </div>
+
+</body>
+</html>
